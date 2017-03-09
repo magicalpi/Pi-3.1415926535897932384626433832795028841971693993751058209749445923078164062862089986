@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html> 
+	<head> 
+		<title> Tower Defense </title> 
+		<script src="https://simplycoding.org/files/simplyjs/simply.js"></script> 
+		<script> 
+		var array = []; //forgotten
+			function start(){
+				sjs.open("target", 800, 500);
+				//Background
+				var background = new sjs.Image("Images/background.png");
+				background.setSize(2400, sjs.getHeight());
+				var view = new sjs.Image("");
+				view.setSize(800, 500);
+				view.moveTo(2400, 500);
+				view.node.style.zIndex = -1;
+				sjs.scrollable(view,background);
+				
+				//Left Key
+				sjs.keyDown(LEFT_KEY, function(){
+					view.pushLeft();
+				});
+				
+				//Right Key
+				sjs.keyDown(RIGHT_KEY, function(){
+					view.pushRight();
+				});
+				
+				//Enemy
+				var enemies = 20;
+				enemies.rate = 1000;//forgotten		enemyInterval changes to enemy_amount
+				var enemy_amount = setInterval(function(){
+					var enemy = new sjs.Image("Images/bad.gif");
+					//totalEnemies--; gone
+					enemy.type = "enemy"; 
+					enemy.moveTo(0,390);
+					enemy.noBounds=true;
+					enemy.setHeight(50); //size changed to Height, only 1 '50'
+					enemy.friction = 0;	
+					enemy.pushRight(1); //5 not 3
+					enemies--;
+					if(enemies <= 0){
+						clearInterval(enemy_amount);
+					}
+				}, 1200); //1200 not 1500
+				//Tracker
+				var tracker = new sjs.Image("");
+				tracker.type = "tracker";
+				tracker.setSize(10, sjs.getHeight()); //10 not 1
+				tracker.moveTo(background.getWidth()/4, 0);
+				tracker.node.style.zIndex = -10;
+				//Land
+				var land = new sjs.Image("");
+				land.type = "land";
+				land.setSize(background.getWidth(), 50);
+				land.moveTo(0, 440);
+				land.node.style.zIndex = -1;
+				//onHit function
+				sjs.onHit("enemy", "tracker", function(x,y){
+					var warn = new sjs.Text("ENEMY APPROACHING QUICKLY! READY YOUR DEFENSES!", 20, "red");
+					warn.moveTo(view.x+100, sjs.getHeight()/3); //3 not 2
+					y.destroy();
+					setTimeout(function(){
+						warn.destroy();
+					}, 2500); //forgotten ;
+				});	
+				sjs.onHit(["blocker", "gunman", "range"], "land", function(x,y){
+					sjs.stoppedBy(x,y);
+				}); //forgotten (replaced by others)
+				sjs.onHit("blocker", "enemy", function(x,y){
+					y.moveTo(y.getX()-35, y.getY());
+					x.lives--;
+					if(x.lives==0){
+						x.destroy();
+					}
+				});//forgotten
+				sjs.onHit("range", "enemy", function(x,y){
+					if(x.fire==true){
+						x.fire = false;
+						var gbullet = new sjs.Image("Images/bullet.png");
+						gbullet.type="bullet";
+						gbullet.moveTo(x.getX()+260,x.getY()+10);
+						gbullet.setSize(40, 10);
+						gbullet.friction=0;
+						gbullet.pushLeft(6);
+						gbullet.noBounds=true;
+						setTimeout(function(){
+							gbullet.destroy();
+							x.fire=true;
+						},x.firerate);
+					}
+				});//forgotten
+				sjs.onHit("gunman", "enemy", function(x,y){
+					x.range.destroy();
+					x.destroy();
+				});//forgotten
+
+				var count = enemies; //forgotten
+				var etext = new sjs.Text("Enemies Remaining: "+count, 15, "green");//forgotten
+				etext.right().offset(-15, 0); //forgotten
+				etext.fixed = true;
+				sjs.onHit("enemy", "bullet", function(x,y){
+					x.destroy();
+					y.destroy();
+					bolts += 10;
+					bolts_text.setText("Bolts Collected: " + bolts);
+					count --;
+					etext.setText("Enemies Remaining: "+count);
+					if(count == 0){
+						var nextLevel = new sjs.Button("Congratulations! Click to go to Level 2!", function(){
+							window.location = "level2.html";
+						});
+						nextLevel.center();
+					}
+				});
+				sjs.onHit("blocker", "gunman", function(x,y){
+					y.moveTo(y.getX()+55,y.getY());
+				});	
+				bolts_text = new sjs.Text("Bolts Collects : "+bolts,18,"green");
+				bolts_text.fixed=true;
+				sjs.onHit("enemy", "right_screen", function(x,y){
+					window.location = "gameover.html";
+				});	
+			}//end start
+			var bolts = 100;
+			var bolts_text = "";
+			function blocker(){
+				if(bolts > 30){
+					bolts -= 30;
+					bolts_text.setText("Bolts Collected: "+bolts);
+					var blocker = new sjs.Image("Images/block.png");
+					blocker.type = "blocker";
+					blocker.setHeight(50);
+					blocker.center().offset(-sjs.gx, 10);
+					blocker.lives = 15;
+					blocker.onMouseDown(function(){
+						blocker.draggable();
+						blocker.follow(sjs.mouse);
+					});
+					blocker.onMouseUp(function(){
+						setTimeout(function(){
+							blocker.undraggable();
+						}, 100)
+						blocker.unfollow(sjs.mouse);
+						blocker.setGravity();
+					});
+				} else{
+					var no_bolts = new sjs.Text("Your bolts Lag! Collect More bolts!", 20, "red");
+					no_bolts.center().offset(-sjs.gx, -200);
+					setTimeout(function(){
+						no_bolts.destroy();
+					}, 2500);
+				}
+			} //end blocker function
+			function gunman(){
+				if(bolts >= 50){ // 50 not 20
+					bolts -= 50;
+					bolts_text.setText("Bolts Collected: "+bolts);
+					var gunman = new sjs.Image("Images/gun.png"); 
+					gunman.type = "gunman";
+					gunman.setHeight(50);
+					gunman.center().offset(-sjs.gx,20);
+					var range = new sjs.Image("");
+					range.type = "range";
+					range.setSize(300, 50);
+					range.moveTo(gunman.getX()-300, gunman.getY());
+					range.follow(gunman); 
+					range.node.style.zIndex = -2;
+					range.fire=true;
+					range.firerate = 1500;
+					gunman.range = range; 
+					gunman.onMouseDown(function(){
+						gunman.draggable();
+						gunman.follow(sjs.mouse);
+					});
+					gunman.onMouseUp(function(){
+						setTimeout(function(){
+							gunman.undraggable();
+						},100); //forgotten ;
+						gunman.unfollow(sjs.mouse);
+						gunman.setGravity();
+						range.setGravity();
+					}); 
+				} else {
+					var no_bolts = new sjs.Text("Your Bolts Lag! Collect More Bolts!",20,"red");
+					no_bolts.center().offset(-sjs.gx,-200);
+					setTimeout(function(){
+						no_bolts.destroy(); 
+					},2500);
+				} 
+			}//end gunman function
+		</script> 
+		<style>
+			.images{
+				height:50px;
+				margin:15px;
+			}
+		</style>
+	</head> 
+	<body onload = "start()"> 
+		<p style="font-size:1.2em; text-align: center">Level 1 : Use arrow Keys to move your view. Puchase Bots to Defend the Right Wall!</p>
+		<center>
+			<img src="Images/block.png" class="images" onclick="blocker()">
+			<img src = "Images/gun.png" class="images" onclick="gunman()">
+			<br>
+			<input type="button" value="30 Bolts!" onclick="blocker()">
+			<input type="button" value="50 Bolts!" onclick="gunman()">
+		</center>
+		<div id="target" style="margin:auto;baackground:lightgrey;"></div> 
+	</body> 
+</html> 

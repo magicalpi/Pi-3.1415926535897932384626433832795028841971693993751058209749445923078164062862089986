@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="icon" href="Images/r_idle.png">
+<title> Tower Defense </title>
+<script src="https://simplycoding.org/files/simplyjs/simply.js"></script>
+<script>
+function start(){
+	sjs.open();
+	var menu_text = new sjs.Text("Tower Defense!",28,"blue");
+	    menu_text.centerH();
+	var createBtn = new sjs.Button("Play Level 1!", function(){
+	    window.location="level1.html";
+	    });
+	    createBtn.center().offset(0,-20);
+	var playBtn = new sjs.Button("All Levels", function(){
+	    	window.location="levels.html";
+	   });
+	playBtn.center().offset(0,20);
+
+	var info_text = new sjs.Text("Setup Defenses, Defeat the Enemies. Challenge Bosses",25);
+	info_text.moveTo(50,80);
+
+	
+
+	// var info_text = new sjs.Text("Created By Adam Sheets",20,"Black");
+	// info_text.bottom().centerH();
+
+
+		var enemy = new sjs.Image("Images/bad.gif");
+		enemy.type = "enemy"; 
+		enemy.setGravity();
+		enemy.noBounds=true;
+		enemy.setHeight(150);
+		enemy.friction = 0;	
+		enemy.pushRight(3);
+		enemy.noBounds = true;
+
+
+ 
+	sjs.onHit("enemy","bottom_screen", function(x,y){
+		sjs.stoppedBy(x,y);
+	});
+
+	sjs.onHit("enemy",["left_screen"], function(x,y){
+		sjs.bounceOff(x,y);
+		enemy.setImage("Images/bad.gif");
+	});
+
+	sjs.onHit("enemy",["right_screen"], function(x,y){
+		sjs.bounceOff(x,y);
+		enemy.setImage("Images/bad.gif");
+	});
+    
+}
+</script>
+</head>
+<body onload="start()">
+<h1><marquee>Tower Defense!</marquee></h1>
+<div id="target" style="margin:auto;background:grey;"></div>
+
+</body>
